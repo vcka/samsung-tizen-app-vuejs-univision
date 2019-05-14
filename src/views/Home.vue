@@ -1,6 +1,5 @@
 <template>
   <div class="home">
-    <div id="logtest"></div>
     <router-link tag="a" :to="{name: 'search'}" class="search" tabindex="0" @focus.native="shouldCache = false">
       <font-awesome-icon icon="search" />
       <span>ХАЙЛТ</span>
@@ -182,10 +181,6 @@ export default {
 </script>
 
 <style lang="css">
-  #logtest {
-    position: absolute;
-    color: red;
-  }
   #rowlist {
     height: 540px;
     overflow-y: hidden;
