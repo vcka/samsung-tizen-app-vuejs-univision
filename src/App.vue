@@ -39,90 +39,6 @@ export default {
       var vm = this
       var activeElement = document.activeElement
 
-      /*if (event.keyCode == 39 || event.keyCode == 37) {
-        // 39 = right, 37 = left
-        event.preventDefault()
-        if (activeElement.classList.contains('item')) {
-          vm.scrolling = true
-          var carousel = $(activeElement).closest('.owl-carousel')
-          var currentitem = $(activeElement).closest('.owl-item')
-          var nextitem = (event.keyCode == 39) ? currentitem.next('.owl-item') : currentitem.prev('.owl-item')
-          var carouselObj = carousel.data('owl.carousel')
-          console.log("NEXT ITEM", nextitem)
-          carousel.on('translated.owl.carousel', function() {
-            vm.scrolling = false
-          })
-          if (event.keyCode == 39) {
-            carousel.trigger('next.owl.carousel')
-          } else {
-            carousel.trigger('prev.owl.carousel')
-          }
-          nextitem.find('.item').focus()
-          if (event.keyCode == 39) {
-            if (carouselObj._items.length <= carouselObj.settings.items ||
-                carouselObj._items.length - carouselObj._current <= carouselObj.settings.items ) {
-              vm.scrolling = false
-            }
-          } else if (event.keyCode == 37 && carouselObj._current == 0) {
-            vm.scrolling = false
-          }
-          if (nextitem.length == 0) {
-            vm.scrolling = false
-          }
-        }
-      } else if (event.keyCode == 40 || event.keyCode == 38) {
-        // 40 = down 38 = up
-        event.preventDefault()
-        if (activeElement.classList.contains('item')) {
-          vm.scrolling = true
-          var rowlist = $('#rowlist')
-          var currentrow = $(activeElement).closest('.row')
-          var nextrow = (event.keyCode == 40) ? currentrow.next('.row') : currentrow.prev('.row')
-          if (event.keyCode == 40) {
-            if (nextrow.length > 0) {
-              rowlist.animate({
-                scrollTop: rowlist.scrollTop() - rowlist.offset().top + nextrow.offset().top
-              }, 250, function () {
-                vm.scrolling = false
-              })
-              if (nextrow.next('.row').length > 0) {
-                currentrow.animate({
-                  opacity: 0
-                }, 250)
-              }
-              nextrow.find('.active:first .item').focus()
-            } else {
-              vm.scrolling = false
-            }
-          } else if (event.keyCode == 38) {
-            if (nextrow.length > 0) {
-              rowlist.animate({
-                scrollTop: rowlist.scrollTop() - rowlist.offset().top + nextrow.offset().top
-              }, 250, function() {
-                vm.scrolling = false
-              })
-              nextrow.animate({
-                opacity: 1
-              }, 250)
-              nextrow.find('.active:first .item').focus()
-            } else {
-              vm.scrolling = false
-              console.log("SEARCH")
-              document.getElementsByClassName('search')[0].focus()
-            }
-          }
-        } else if (activeElement.classList.contains('button')) {
-          var currentButton = $(activeElement)
-          var nextButton = (event.keyCode == 40) ? currentButton.next('.button') : currentButton.prev('.button')
-          nextButton.focus()
-        } else if (activeElement.classList.contains('search') && event.keyCode == 40) {
-          $('#rowlist .row:first .active:first .item').focus()
-        } else if (activeElement.classList.contains('searchInput') && event.keyCode == 40) {
-          $('.grid-item:first').focus()
-        }
-      }*/
-
-
       // Browse handling
       if (activeElement.classList.contains('item')) {
         if (event.keyCode == 40 || event.keyCode == 38) {
@@ -135,19 +51,6 @@ export default {
             this.rowList.scrollTop = this.rowList.scrollTop - this.rowList.offsetTop + nextRow.getBoundingClientRect().top
             vm.scrolling = false
             nextRow.lastChild.firstElementChild.querySelector('.item.lastFocused').focus()
-            //nextRow.lastChild.firstElementChild.firstElementChild.firstElementChild.focus()
-
-            /*rowList.animate({
-              scrollTop: rowList.scrollTop() - rowList.offset().top + nextRow.offset().top
-            }, 250, function () {
-              vm.scrolling = false
-            })*/
-            /*var opacityObject = (event.keyCode == 40) ? currentRow : nextRow
-            var opacityValue = (event.keyCode == 40 && nextRow.next('.row').length > 0) ? 0 : 1
-            opacityObject.animate({
-              opacity: opacityValue
-            }, 250)*/
-            //nextRow.find('.active:first .item').focus()
           } else {
             vm.scrolling = false
             if (event.keyCode == 38) {
@@ -211,31 +114,6 @@ export default {
               this.nextItem.firstChild.focus()
             }
           }
-
-          /*var carousel = $(activeElement).closest('.owl-carousel')
-          var carouselObj = carousel.data('owl.carousel')
-          currentItem = $(activeElement).closest('.owl-item')
-          nextItem = (event.keyCode == 39) ? currentItem.next('.owl-item') : currentItem.prev('.owl-item')
-          carousel.on('translated.owl.carousel', function() {
-            vm.scrolling = false
-          })
-          if (event.keyCode == 39) {
-            carousel.trigger('next.owl.carousel')
-          } else {
-            carousel.trigger('prev.owl.carousel')
-          }
-          nextItem.find('.item').focus()*/
-          /*if (event.keyCode == 39) {
-            if (carouselObj._items.length <= carouselObj.settings.items ||
-                carouselObj._items.length - carouselObj._current <= carouselObj.settings.items ) {
-              vm.scrolling = false
-            }
-          } else if (event.keyCode == 37 && carouselObj._current == 0) {
-            vm.scrolling = false
-          }
-          if (nextItem.length == 0) {
-            vm.scrolling = false
-          }*/
         }
       }
 
@@ -304,22 +182,6 @@ export default {
               this.nextItem.children[activeElement.dataset.index].focus()
             }
           }
-          /*var gridRow = activeElement.parentNode
-          var gridScrollContainer = gridRow.parentNode
-          var index = Array.prototype.indexOf.call(gridRow.children, activeElement)
-          var nextRowItems = event.keyCode == 40 ? gridRow.nextElementSibling : gridRow.previousElementSibling
-          if (nextRowItems) {
-            nextRowItems = nextRowItems.querySelectorAll('.grid-item')
-            this.nextItem = index >= nextRowItems.length ? nextRowItems[nextRowItems.length - 1] : nextRowItems[index]
-            if (this.nextItem) {
-              gridScrollContainer.scrollTop = gridScrollContainer.scrollTop - gridScrollContainer.offsetTop + this.nextItem.getBoundingClientRect().top - 15
-              this.nextItem.focus()
-            }
-          } else {
-            if (event.keyCode == 38 && !gridScrollContainer.parentNode.classList.contains('singleCatGrid')) {
-              document.getElementById('searchInput').focus()
-            }
-          }*/
         } else if (event.keyCode == 39 || event.keyCode == 37) {
           event.preventDefault()
           this.nextItem = event.keyCode == 39 ? activeElement.nextElementSibling : activeElement.previousElementSibling
@@ -330,7 +192,6 @@ export default {
       }
 
       // Other handling
-
       if (activeElement.classList.contains('button') && (event.keyCode == 40 || event.keyCode == 38)) {
         event.preventDefault()
         var nextButton = (event.keyCode == 40) ? activeElement.nextElementSibling : activeElement.previousElementSibling

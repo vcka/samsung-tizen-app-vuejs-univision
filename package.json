@@ -14,7 +14,6 @@
     "core-js": "^2.6.5",
     "intersection-observer": "^0.7.0",
     "jquery": "^3.4.1",
-    "owl.carousel": "^2.3.4",
     "vue": "^2.6.10",
     "vue-js-modal": "^1.3.31",
     "vue-router": "^3.0.3",

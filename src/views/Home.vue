@@ -80,10 +80,6 @@ export default {
             setTimeout(function () {
               rowScroller.querySelector('.item[data-index="' + (restoreState.fromColumn) + '"]').focus()
             }, 200)
-
-            /*var carousel = $(vm.$refs['myRowList']).find('.owl-carousel').eq(restoreState.fromRow)
-            carousel.trigger('to.owl.carousel', [restoreState.fromColumn, 0, true])
-            carousel.find('.item').eq(restoreState.fromColumn).focus()*/
             vm.$store.commit('removeScrollState', to.fullPath)
           } else {
             if (vm.$refs['myRowList'].firstElementChild.classList.contains('singleCatGrid')) {
@@ -210,9 +206,6 @@ export default {
     font-size: 30px;
     color: #D7D7D7;
     margin-right: 60px;
-  }
-  .row .owl-carousel .owl-stage-outer {
-    overflow: visible;
   }
   .home .loader-wrapper {
     position: absolute;

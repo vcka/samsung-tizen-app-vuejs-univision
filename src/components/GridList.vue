@@ -13,21 +13,7 @@
       <template v-if="item.items.length < size">
         <div class="grid-item-dummy" :key="index" v-for="index in size - item.items.length"></div>
       </template>
-      <!--<div class="item" tabIndex="0" :data-index="index" @keyup.enter="onItemClicked(item, index)" @click="onItemClicked(item, index)" @focus="onItemFocused(item, index)" :class="{lastFocused: focusedItemIndex == index}">
-        <img class="owl-lazy" :src="fullSrc(item.poster)" alt="">
-      </div>-->
     </RecycleScroller>
-    <!--<div class="grid-scroll-container">
-      <div class="grid-row" :key="'gridRow-' + rowIndex" v-for="(chunk, rowIndex) in chunkedItems">
-        <div class="grid-item" :key="'gridItem-' + columnIndex" v-for="(item, columnIndex) in chunk" tabindex="0" @click="onItemClicked(item, rowIndex, columnIndex)" @keyup.enter="onItemClicked(item, rowIndex, columnIndex)" @focus="onItemFocused(item, rowIndex * size + columnIndex)">
-          <img :src="fullSrc(item.poster)" alt="">
-          <div class="vertically-centered"><p>{{ item.name }}</p></div>
-        </div>
-        <template v-if="chunk.length < size">
-          <div class="grid-item-dummy" :key="index" v-for="index in size - chunk.length"></div>
-        </template>
-      </div>
-    </div>-->
   </div>
 </template>
 
