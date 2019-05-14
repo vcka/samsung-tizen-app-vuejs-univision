@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<widget xmlns:tizen="http://tizen.org/ns/widgets" xmlns="http://www.w3.org/ns/widgets" id="http://yourdomain/BasicProject" version="1.0.1" height="1080" width="1920" viewmodes="maximized">
-    <tizen:application id="XgL7EEutl2.BasicProject" package="XgL7EEutl2" required_version="2.3"/>
+<widget xmlns:tizen="http://tizen.org/ns/widgets" xmlns="http://www.w3.org/ns/widgets" id="https://konozone.com/UnivisionVod" version="1.0.1" height="1080" width="1920" viewmodes="maximized">
+    <tizen:application id="bGCRTGMTag.UnivisionVod" package="bGCRTGMTag" required_version="2.3"/>
+    <author href="https://konozone.com" email="uuganbaatarbaynsuren2016@gmail.com">Uuganbaatar</author>
     <content src="index.html"/>
     <feature name="http://tizen.org/feature/screen.size.normal.1080.1920"/>
     <icon src="icon.png"/>
-    <name>BasicProject3</name>
+    <name>UnivisionVod</name>
     <tizen:privilege name="http://developer.samsung.com/privilege/network.public"/>
     <tizen:profile name="tv-samsung"/>
     <tizen:setting screen-orientation="landscape" context-menu="enable" background-support="disable" encryption="disable" install-location="auto" hwkey-event="enable"/>
