@@ -14,8 +14,6 @@ Vue.component('font-awesome-icon', FontAwesomeIcon)
 
 Vue.use(VueVirtualScroller)
 
-window.$ = window.jQuery = require("jquery")
-
 Vue.config.productionTip = false
 
 new Vue({
