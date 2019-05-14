@@ -248,6 +248,7 @@ export default {
     document.addEventListener("keydown", this.focusNextItem)
     window.addEventListener('appcontrol', this.deepLink)
     this.$router.push('/')
+    this.deepLink()
   },
 
   created () {
