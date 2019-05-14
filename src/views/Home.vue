@@ -165,11 +165,13 @@ export default {
   created () {
     var vm = this
     this.fetchList().then(function () {
-      if (vm.$refs['myRowList'].firstElementChild.classList.contains('singleCatGrid')) {
-        vm.$refs['myRowList'].querySelector('.grid-item').focus()
-      } else {
-        vm.$refs['myRowList'].querySelector('.item').focus()
-      }
+      setTimeout(function () {
+        if (vm.$refs['myRowList'].firstElementChild.classList.contains('singleCatGrid')) {
+          vm.$refs['myRowList'].querySelector('.grid-item').focus()
+        } else {
+          vm.$refs['myRowList'].querySelector('.item').focus()
+        }
+      }, 200)
     })
   }
 }
