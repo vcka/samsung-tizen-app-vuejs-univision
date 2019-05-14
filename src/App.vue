@@ -22,11 +22,20 @@ export default {
   methods: {
     focusNextItem () {
       document.getElementById("logtest").innerHTML = event.keyCode
+      // Using "\" key as a back button for debugging (since we're using vue-router abstract mode)
+      if (event.keyCode == 220) {
+        this.$router.go(-1)
+        return
+      }
       if (event.keyCode == 10009) {
         if (this.$route.name == 'browselist' && this.$route.path == '/') {
           var choice = confirm('Are you sure you want to exit?')
           if (choice == true) {
-            tizen.application.getCurrentApplication().exit()
+            try {
+              tizen.application.getCurrentApplication().exit()
+            } catch {
+              console.log('Tizen app exit failed')
+            }
           }
         } else {
           this.$router.go(-1)
@@ -213,11 +222,35 @@ export default {
         event.preventDefault()
         document.querySelector('#search-screen .grid-item.lastFocused').focus()
       }
+    },
+    deepLink () {
+      console.log('deepLink')
+      if (this.$route.name != 'browselist') return
+      var requestedAppControl = tizen.application.getCurrentApplication().getRequestedAppControl()
+      if (requestedAppControl) {
+        var appControlData = requestedAppControl.appControl.data
+
+        for (var i = appControlData.length - 1; i >= 0; i--) {
+          if (appControlData[i].key == 'PAYLOAD') {
+            var actionData = JSON.parse(appControlData[i].value[0]).values
+            actionData = JSON.parse(actionData)
+            this.$router.push({
+              name: 'movie',
+              params: {
+                movieId: actionData.uid,
+                item: actionData
+              }
+            })
+          }
+        }
+      }
     }
   },
 
   mounted () {
     document.addEventListener("keydown", this.focusNextItem)
+    window.addEventListener('appcontrol', this.deepLink)
+    this.$router.push('/')
   },
 
   created () {
@@ -409,6 +442,11 @@ h1, h2, h3, h4 {
   width: 1920px;
   height: 1080px;
   z-index: 10;
+}
+#logtest {
+  position: absolute;
+  color: red;
+  z-index: 100;
 }
 
 @font-face {

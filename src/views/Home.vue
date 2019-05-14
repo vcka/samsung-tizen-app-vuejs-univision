@@ -11,7 +11,7 @@
         <GridList @itemClicked="itemClicked" :emitOnFocus="true" :items="items[0].list" :header="items[0].name" :itemSize="315" v-if="items[0]" class="singleCatGrid" :size="8" />
       </template>
       <template v-else>
-        <RowListRecycler @itemClicked="itemClicked" :item="item" :index="index" :key="item.uid" v-for="(item, index) in items" />
+        <RowListRecycler @itemFocused="rowItemFocused" @itemClicked="itemClicked" :item="item" :index="index" :key="item.uid" v-for="(item, index) in items" />
       </template>
     </div>
 
@@ -45,7 +45,8 @@ export default {
       loading: true,
       items: [],
       chosenItem: null,
-      shouldCache: true
+      shouldCache: true,
+      lastFocusedRowIndex: 0
     };
   },
   computed: {
@@ -60,13 +61,13 @@ export default {
   watch: {
     '$route': function (to, from) {
       var restoreState = this.$store.state.scrollStates[to.fullPath]
-      if ((from.name == 'movie' || from.name == 'series') && restoreState) {
+
+      if ((from.name == 'movie' || from.name == 'series')) {
         if (this.$refs['myRowList'].firstElementChild.classList.contains('singleCatGrid')) {
           this.$refs['myRowList'].querySelector('.vue-recycle-scroller__item-view .grid-item.lastFocused').focus()
         } else {
-          this.$refs['myRowList'].querySelector('.row:nth-child(' + (restoreState.fromRow + 1) + ') .item.lastFocused').focus()
+          this.$refs['myRowList'].querySelector('.row:nth-child(' + (this.lastFocusedRowIndex + 1) + ') .item.lastFocused').focus()
         }
-        this.$store.commit('removeScrollState', to.fullPath)
       }
       if (to.name == 'browselist' && from.name == 'browselist') {
         var vm = this
@@ -160,6 +161,9 @@ export default {
           }
         })
       }
+    },
+    rowItemFocused (rowIndex) {
+      this.lastFocusedRowIndex = rowIndex
     }
   },
   created () {

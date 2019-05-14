@@ -31,9 +31,10 @@ export default {
     fullSrc (src) {
       return "http://192.168.2.88:8001" + src
     },
-    onItemFocused (focusedItem, focusedItemIndex,) {
+    onItemFocused (focusedItem, focusedItemIndex) {
       this.focusedItemIndex = focusedItemIndex
       this.$root.$emit('itemFocused', focusedItem)
+      this.$emit('itemFocused', this.index)
     },
     onItemClicked (item, itemIndex) {
       this.$emit('itemClicked', item, this.index, itemIndex, 'recycler')

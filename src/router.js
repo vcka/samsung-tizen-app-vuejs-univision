@@ -8,6 +8,7 @@ import Search from '@/views/Search.vue'
 Vue.use(Router)
 
 export default new Router({
+  mode: 'abstract', // using abstract mode only because "Smart Hub Preview" only worked on root home page ("/") in other modes ("hash", "history")
   routes: [
     {
       path: '/browselist/:id?',
@@ -50,6 +51,12 @@ export default new Router({
           ]
         }
       ]
+    },
+    {
+      path: '/movie/:movieId',
+      name: 'rootmovie',
+      component: SourceDialog,
+      props: true
     }
   ]
 })
