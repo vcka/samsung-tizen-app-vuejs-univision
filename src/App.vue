@@ -1,15 +1,21 @@
 <template>
   <div id="app">
     <div id="logtest"></div>
-    <object id="av-player" type="application/avplayer"></object>
+    <Player/>
     <router-view/>
   </div>
 </template>
 
 <script>
+import Player from '@/components/Player.vue'
+
 export default {
 
   name: 'App',
+
+  components: {
+    Player
+  },
 
   data () {
     return {
@@ -19,12 +25,15 @@ export default {
   methods: {
     focusNextItem () {
       document.getElementById("logtest").innerHTML = event.keyCode
-      // Using "\" key as a back button for debugging (since we're using vue-router abstract mode)
-      if (event.keyCode == 220) {
-        this.$router.go(-1)
-        return
-      }
-      if (event.keyCode == 10009) {
+      // Using "\" 220 key as a back button for debugging (since we're using vue-router abstract mode)
+      if (event.keyCode == 10009 || event.keyCode == 220) {
+        try {
+          var state = webapis.avplay.getState()
+          if (state == 'PLAYING' || state == 'PAUSED') {
+            this.$store.dispatch('closeStream')
+            return
+          }
+        } catch {}
         if (this.$route.name == 'browselist' && this.$route.path == '/') {
           var choice = confirm('Are you sure you want to exit?')
           if (choice == true) {
@@ -42,8 +51,32 @@ export default {
       if (this.scrolling) {
         return
       }
+
       var vm = this
       var activeElement = document.activeElement
+
+      // Player handling
+      // Show hidden control
+      if (activeElement.tagName == 'BODY' && document.getElementById('player').style.display != 'none') {
+        event.preventDefault()
+        console.log("SHOW!!")
+        this.$store.dispatch('showControls')
+        return
+      }
+
+      if (activeElement.classList.contains('player-button')) {
+        if (event.keyCode != 13) {
+          event.preventDefault()
+        }
+        this.$store.dispatch('showControls')
+        if (event.keyCode == 39 || event.keyCode == 37) {
+          this.nextItem = (event.keyCode == 39) ? activeElement.nextElementSibling : activeElement.previousElementSibling
+          if (this.nextItem) {
+            this.nextItem.focus()
+          }
+        }
+        return
+      }
 
       // Browse handling
       if (activeElement.classList.contains('item')) {
@@ -121,6 +154,7 @@ export default {
             }
           }
         }
+        return
       }
 
       // Search screen handling
@@ -195,6 +229,7 @@ export default {
             this.nextItem.focus()
           }
         }
+        return
       }
 
       // Other handling
@@ -204,6 +239,7 @@ export default {
         if (nextButton) {
           nextButton.focus()
         }
+        return
       }
       if (activeElement.classList.contains('search') && event.keyCode == 40) {
         event.preventDefault()
@@ -214,15 +250,17 @@ export default {
         } else {
           this.rowList.querySelector('.item.lastFocused').focus()
         }
+        return
       }
       if (activeElement.classList.contains('searchInput') && event.keyCode == 40) {
         event.preventDefault()
         document.querySelector('#search-screen .grid-item.lastFocused').focus()
+        return
       }
     },
     deepLink () {
       console.log('deepLink')
-      if (this.$route.name != 'browselist') return
+      if (typeof(tizen) == 'undefined' || this.$route.name != 'browselist') return
       var requestedAppControl = tizen.application.getCurrentApplication().getRequestedAppControl()
       if (requestedAppControl) {
         var appControlData = requestedAppControl.appControl.data
@@ -432,15 +470,6 @@ h1, h2, h3, h4 {
   }
 }
 
-#av-player {
-  display: none;
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 1920px;
-  height: 1080px;
-  z-index: 10;
-}
 #logtest {
   position: absolute;
   color: red;

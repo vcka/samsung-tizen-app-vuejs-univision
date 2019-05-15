@@ -7,7 +7,12 @@ export default new Vuex.Store({
   state: {
     scrollStates: {},
     episodeSelections: {},
-    focusedItem: null
+    focusedItem: null,
+    streamItem: {
+      name: '',
+      url: ''
+    },
+    showPlayerControls: false
   },
   mutations: {
     upsertScrollState (state, updateStateData) {
@@ -24,14 +29,38 @@ export default new Vuex.Store({
     },
     focusItem (state, item) {
       state.focusedItem = item
+    },
+    changeStream (state, streamObject) {
+      state.streamItem = streamObject
+    },
+    updatePlayerControls (state, value) {
+      state.showPlayerControls = value
     }
   },
   getters: {
     focusedItem (state) {
       return state.focusedItem || {}
+    },
+    streamItem (state) {
+      return state.streamItem
+    },
+    playerControlVisibility (state) {
+      return state.showPlayerControls
     }
   },
   actions: {
-
+    playStream (context, value) {
+      context.commit('changeStream', value)
+      context.commit('updatePlayerControls', true)
+    },
+    closeStream (context) {
+      context.commit('changeStream', {name: '', url: ''})
+    },
+    hideControls (context) {
+      context.commit('updatePlayerControls', false)
+    },
+    showControls (context) {
+      context.commit('updatePlayerControls', true)
+    }
   }
 })
