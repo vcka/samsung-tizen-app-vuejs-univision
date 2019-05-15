@@ -72,6 +72,7 @@ export default {
         var vm = this
         this.fetchList().then(function () {
           if (restoreState) {
+            console.log("RESTORE STATE!!!")
             var rowScroller = vm.$refs['myRowList'].querySelector('.row:nth-child(' + (restoreState.fromRow + 1) + ') .vue-recycle-scroller')
             vm.$refs['myRowList'].scrollTop = restoreState.fromScrollPositionTop
             rowScroller.scrollLeft = restoreState.fromScrollPositionLeft
@@ -79,7 +80,7 @@ export default {
             
             setTimeout(function () {
               rowScroller.querySelector('.item[data-index="' + (restoreState.fromColumn) + '"]').focus()
-            }, 200)
+            }, 0)
             vm.$store.commit('removeScrollState', to.fullPath)
           } else {
             if (vm.$refs['myRowList'].firstElementChild.classList.contains('singleCatGrid')) {
@@ -132,7 +133,6 @@ export default {
         state.data.isGrid = false
         state.data.fromScrollPositionLeft = document.querySelector("#rowlist .row:nth-child(" + (itemRowIndex + 1) + ") .vue-recycle-scroller").scrollLeft
       }
-      this.$store.commit('upsertScrollState', state)
       if (item.type == 'movie') {
         this.$router.push({
           name: 'movie',
@@ -153,6 +153,7 @@ export default {
         })
       }
       else {
+        this.$store.commit('upsertScrollState', state)
         this.$router.push({
           name: 'browselist',
           params: {
