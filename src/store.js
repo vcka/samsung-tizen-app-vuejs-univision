@@ -7,7 +7,7 @@ export default new Vuex.Store({
   state: {
     scrollStates: {},
     episodeSelections: {},
-    serieses: []
+    focusedItem: null
   },
   mutations: {
     upsertScrollState (state, updateStateData) {
@@ -22,20 +22,13 @@ export default new Vuex.Store({
     removeEpisodeSelection (state, updateStateKey) {
       delete state.episodeSelections[updateStateKey]
     },
-    addSeries (state, payload) {
-      var index = state.serieses.findIndex(function (series) {
-        return series.uid == payload.uid
-      })
-      if (index === -1) {
-        state.serieses.push(payload)
-      }
+    focusItem (state, item) {
+      state.focusedItem = item
     }
   },
   getters: {
-    getSeriesByUid: state => uid => {
-      return state.serieses.filter(function (series) {
-        return series.uid == uid
-      })[0]
+    focusedItem (state) {
+      return state.focusedItem || {}
     }
   },
   actions: {

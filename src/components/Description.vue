@@ -1,17 +1,17 @@
 <template>
-  <div id="description" :class="{category: type == 'category'}">
+  <div id="description" :class="{category: focusedItem.type == 'category'}">
     <div class="left">
-      <div :key="uid">
-        <h1>{{ name }}</h1>
-        <h2>{{ year }}</h2>
-        <p>{{ description }}</p>
+      <div :key="focusedItem.uid">
+        <h1>{{ focusedItem.name }}</h1>
+        <h2>{{ focusedItem.year }}</h2>
+        <p>{{ focusedItem.description }}</p>
       </div>
     </div>
     <div class="right" :class="{noImage: noImageFetched}" :style="{backgroundImage: backgroundImage}">
       <div class="lds-ellipsis" :style="{visibility: fetchingImage ? 'visible' : 'hidden'}"><div></div><div></div><div></div><div></div></div>
     </div>
     <div class="hero">
-      <h1>{{ name }}</h1>
+      <h1>{{ focusedItem.name }}</h1>
     </div>
   </div>
 </template>
@@ -23,13 +23,8 @@ export default {
 
   data () {
     return {
-      name: '',
-      year: '',
-      description: '',
       backgroundPrefix: 'linear-gradient(45deg, #f8a261, #6e9fc9), linear-gradient(135deg, #08526b, #fbcd7c)',
       background: '',
-      type: 'movie',
-      uid: null,
       fetchingImage: false,
       noImageFetched: false,
     }
@@ -38,47 +33,41 @@ export default {
   computed: {
     backgroundImage () {
       return this.backgroundPrefix + (this.background == '' ? '' : ', ' + this.background);
+    },
+    focusedItem () {
+      return this.$store.getters.focusedItem
     }
   },
 
-  mounted: function () {
-    var vm = this
-    this.$root.$on('itemFocused', function (itemData) {
-      if (vm.uid != itemData.uid) {
-        clearTimeout(vm.timeout)
-        vm.uid = itemData.uid
-        vm.name = itemData.name
-        vm.year = itemData.year
-        vm.description = itemData.description
-        vm.type = itemData.type
-        vm.background = ""
-        vm.fetchingImage = true
-        vm.timeout = setTimeout(function () {
-          fetch("https://api.themoviedb.org/3/search/movie?api_key=d2a129234a7199d7e4edea0023bb7c0d&language=en-US&query=" + itemData.name + "&page=1&include_adult=false&year=" + itemData.year).then(function (response) {
-            return response.json()
-          }).then(function (data) {
-            if (data.results.length > 0 && data.results[0].backdrop_path != null) {
-              var img = new Image()
-              img.onload = function () {
-                if (vm.uid == itemData.uid) {
-                  vm.background = "url(" + "https://image.tmdb.org/t/p/w1280" + data.results[0].backdrop_path + ")"
-                }
-                vm.fetchingImage = false
-              }
-              img.src = "https://image.tmdb.org/t/p/w1280" + data.results[0].backdrop_path
-              vm.noImageFetched = false
-            } else {
-              vm.background = "url(" + "http://192.168.2.88:8001" + itemData.poster + ")"
-              vm.noImageFetched = true
+  watch: {
+    focusedItem: function (focusedItem) {
+      clearTimeout(this.timeout)
+      this.background = ''
+      this.fetchingImage = true
+      var vm = this
+      this.timeout = setTimeout(function () {
+        fetch("https://api.themoviedb.org/3/search/movie?api_key=d2a129234a7199d7e4edea0023bb7c0d&language=en-US&query=" + focusedItem.name + "&page=1&include_adult=false&year=" + focusedItem.year).then(function (response) {
+          return response.json()
+        }).then(function (data) {
+          if (data.results.length > 0 && data.results[0].backdrop_path != null) {
+            var img = new Image()
+            img.onload = function () {
+              vm.background = "url(" + "https://image.tmdb.org/t/p/w1280" + data.results[0].backdrop_path + ")"
               vm.fetchingImage = false
             }
-          }).catch(function () {
-            vm.fetchingImage = false
+            img.src = "https://image.tmdb.org/t/p/w1280" + data.results[0].backdrop_path
+            vm.noImageFetched = false
+          } else {
+            vm.background = "url(" + "http://192.168.2.88:8001" + focusedItem.poster + ")"
             vm.noImageFetched = true
-          })
-        }, 200)
-      }
-    })
+            vm.fetchingImage = false
+          }
+        }).catch(function () {
+          vm.fetchingImage = false
+          vm.noImageFetched = true
+        })
+      }, 200)
+    }
   }
 }
 </script>

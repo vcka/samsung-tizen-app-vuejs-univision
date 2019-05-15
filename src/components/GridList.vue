@@ -65,7 +65,7 @@ export default {
     onItemFocused (focusedItem, focusedItemIndex) {
       this.focusedItemIndex = focusedItemIndex
       if (this.emitOnFocus !== false) {
-        this.$root.$emit('itemFocused', focusedItem)
+        this.$store.commit('focusItem', focusedItem)
       }
     }
   }
