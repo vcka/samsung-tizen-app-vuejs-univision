@@ -168,13 +168,11 @@ export default {
   created () {
     var vm = this
     this.fetchList().then(function () {
-      setTimeout(function () {
-        if (vm.$refs['myRowList'].firstElementChild.classList.contains('singleCatGrid')) {
-          vm.$refs['myRowList'].querySelector('.grid-item').focus()
-        } else {
-          vm.$refs['myRowList'].querySelector('.item').focus()
-        }
-      }, 200)
+      if (vm.$refs['myRowList'].firstElementChild.classList.contains('singleCatGrid')) {
+        vm.$refs['myRowList'].querySelector('.grid-item').focus()
+      } else {
+        vm.$refs['myRowList'].querySelector('.item').focus()
+      }
     })
   }
 }
