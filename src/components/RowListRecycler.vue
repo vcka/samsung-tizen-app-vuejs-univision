@@ -33,7 +33,8 @@ export default {
     },
     onItemFocused (focusedItem, focusedItemIndex) {
       this.focusedItemIndex = focusedItemIndex
-      this.$root.$emit('itemFocused', focusedItem)
+      this.$store.commit('focusItem', focusedItem)
+      //this.$root.$emit('itemFocused', focusedItem)
       this.$emit('itemFocused', this.index)
     },
     onItemClicked (item, itemIndex) {
