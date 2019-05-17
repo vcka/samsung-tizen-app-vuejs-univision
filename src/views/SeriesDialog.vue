@@ -1,5 +1,5 @@
 <template>
-  <div class="modal">
+  <div class="modal seriesModal">
     <div class="content">
       <h1>{{ myItem.name }}</h1>
       <div class="buttons" ref="seriesButtons">
