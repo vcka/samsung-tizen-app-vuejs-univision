@@ -27,13 +27,25 @@ export default {
       document.getElementById("logtest").innerHTML = event.keyCode
       // Using "\" 220 key as a back button for debugging (since we're using vue-router abstract mode)
       if (event.keyCode == 10009 || event.keyCode == 220) {
+        var state = ''
         try {
-          var state = webapis.avplay.getState()
-          if (state == 'PLAYING' || state == 'PAUSED') {
-            this.$store.dispatch('closeStream')
-            return
-          }
-        } catch {}
+          state = webapis.avplay.getState()
+        } catch {
+        }
+        var playerVisible = document.getElementById('player').style.display != 'none'
+        var playerControlsVisible = this.$store.getters.playerControlVisibility
+        
+        if (playerVisible && !playerControlsVisible && (state == 'PLAYING' || state == 'PAUSED')) {
+          this.$store.dispatch('closeStream')
+          document.querySelector('.sourceModal .button.lastFocused').focus()
+          return
+        }
+
+        if (playerControlsVisible) {
+          this.$store.dispatch('hideControls')
+          return
+        }
+
         if (this.$route.name == 'browselist' && this.$route.path == '/') {
           var choice = confirm('Are you sure you want to exit?')
           if (choice == true) {
@@ -48,6 +60,11 @@ export default {
         }
         return
       }
+      // Play/Pause key pressed
+      if (event.keyCode == 10252) {
+        this.$store.dispatch('toggleStreamPlayPause')
+        return
+      }
       if (this.scrolling) {
         return
       }
@@ -56,24 +73,31 @@ export default {
       var activeElement = document.activeElement
 
       // Player handling
-      // Show hidden control
-      if (activeElement.tagName == 'BODY' && document.getElementById('player').style.display != 'none') {
-        event.preventDefault()
-        console.log("SHOW!!")
-        this.$store.dispatch('showControls')
-        return
-      }
-
-      if (activeElement.classList.contains('player-button')) {
-        if (event.keyCode != 13) {
-          event.preventDefault()
-        }
-        this.$store.dispatch('showControls')
-        if (event.keyCode == 39 || event.keyCode == 37) {
-          this.nextItem = (event.keyCode == 39) ? activeElement.nextElementSibling : activeElement.previousElementSibling
-          if (this.nextItem) {
-            this.nextItem.focus()
+      if (document.getElementById('player').style.display != 'none') {
+        if (activeElement.classList.contains('player-button')) {
+          if (event.keyCode != 13) {
+            event.preventDefault()
           }
+          this.$store.dispatch('showControls')
+          if (event.keyCode == 39 || event.keyCode == 37) {
+            this.nextItem = (event.keyCode == 39) ? activeElement.nextElementSibling : activeElement.previousElementSibling
+            if (this.nextItem) {
+              this.nextItem.focus()
+            }
+          } else if (event.keyCode == 38) {
+            document.getElementById('playerSliderDot').focus()
+          }
+        } else if (activeElement.id == 'playerSliderDot') {
+          event.preventDefault()
+          if (event.keyCode == 40) {
+            document.querySelectorAll('.player-button')[1].focus()
+          } else if (event.keyCode == 38) {
+            document.querySelectorAll('.player-button')[1].focus()
+            this.$store.dispatch('hideControls')
+          }
+        } else {
+          event.preventDefault()
+          this.$store.dispatch('showControls')
         }
         return
       }
@@ -290,6 +314,9 @@ export default {
   },
 
   mounted () {
+    try {
+      tizen.tvinputdevice.registerKey("MediaPlayPause")
+    } catch {}
     document.addEventListener("keydown", this.focusNextItem)
     window.addEventListener('appcontrol', this.deepLink)
     this.$router.push('/')

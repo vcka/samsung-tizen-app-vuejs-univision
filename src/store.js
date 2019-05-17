@@ -12,7 +12,8 @@ export default new Vuex.Store({
       name: '',
       url: ''
     },
-    showPlayerControls: false
+    showPlayerControls: false,
+    pauseStream: false
   },
   mutations: {
     upsertScrollState (state, updateStateData) {
@@ -35,6 +36,12 @@ export default new Vuex.Store({
     },
     updatePlayerControls (state, value) {
       state.showPlayerControls = value
+    },
+    togglePlayPause (state) {
+      state.pauseStream = !state.pauseStream
+    },
+    updatePlayPause (state, value) {
+      state.pauseStream = value
     }
   },
   getters: {
@@ -46,6 +53,9 @@ export default new Vuex.Store({
     },
     playerControlVisibility (state) {
       return state.showPlayerControls
+    },
+    isStreamPaused (state) {
+      return state.pauseStream
     }
   },
   actions: {
@@ -61,6 +71,13 @@ export default new Vuex.Store({
     },
     showControls (context) {
       context.commit('updatePlayerControls', true)
+    },
+    toggleStreamPlayPause (context, value) {
+      if (value === undefined) {
+        context.commit('togglePlayPause')
+      } else {
+        context.commit('updatePlayPause')
+      }
     }
   }
 })

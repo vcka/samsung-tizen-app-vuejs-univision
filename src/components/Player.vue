@@ -1,21 +1,49 @@
 <template>
   <div id="player" v-show="playing">
     <object id="av-player" type="application/avplayer"></object>
-    <div class="controls" v-show="playerControlVisibility">
-      <div class="progress" :style="{transform: progressPosition}"></div>
+    <div id="playerLoader" v-show="buffering">
+      <div id="loading">
+        <p>{{ bufferPercent }}</p>
+        <div class="bulletouter">
+          <div class="bulletinner"></div>
+          <div class="mask"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
+    </div>
+    <div class="controls" :class="{show: playerControlVisibility}">
+      <vue-slider
+        :value="playerProgress"
+        class="vueprogress"
+        width="1860px"
+        :use-keyboard="true"
+        :interval="2"
+        :duration="0"
+        :contained="true"
+        :processStyle="{background: 'red'}"
+        :railStyle="{background: 'white'}"
+        :tooltipStyle="{padding: '14px', fontSize: '20px'}"
+        :tooltip-formatter="progressFormatter"
+        ref="slider">
+        <template v-slot:dot>
+          <div id="playerSliderDot" class="vue-slider-dot-handle" tabindex="0" @focus="focusSlider()" @blur="blurSlider()"></div>
+        </template>
+      </vue-slider>
       <div class="control">
         <h2 class="title">{{ name }}</h2>
+        <p v-show="seekTime < 0">{{ seekTime }}s</p>
         <div class="player-buttons">
-          <button class="player-button" tabindex="0" tooltip="-30s" @focus="onButtonFocused()" >
+          <button class="player-button" tabindex="0" tooltip="-30s" @focus="onButtonFocused()" @click="onButtonClicked('seekBackward')" >
             <font-awesome-icon icon="history" fixed-width />
           </button>
-          <button class="player-button" tabindex="0" :tooltip="paused ? 'PLAY' : 'PAUSE'"  @focus="onButtonFocused()" @click="togglePlay()" ref="playButton" autofocus>
+          <button class="player-button" tabindex="0" :tooltip="paused ? 'PLAY' : 'PAUSE'"  @focus="onButtonFocused()" @click="onButtonClicked('playPause')" ref="playButton" autofocus>
             <font-awesome-icon :icon="paused ? 'play' : 'pause'" fixed-width />
           </button>
-          <button class="player-button flipped" tabindex="0" tooltip="+30s" @focus="onButtonFocused()" >
+          <button class="player-button flipped" tabindex="0" tooltip="+30s" @focus="onButtonFocused()" @click="onButtonClicked('seekForward')" >
             <font-awesome-icon icon="history" flip="horizontal" fixed-width />
           </button>
         </div>
+        <p v-show="seekTime > 0">+{{ seekTime }}s</p>
         <h2 class="time">{{ currentTimeFormatted }} / {{ totalTimeFormatted }}</h2>
       </div>
     </div>
@@ -23,27 +51,42 @@
 </template>
 
 <script>
+import VueSlider from 'vue-slider-component'
+import 'vue-slider-component/theme/default.css'
 export default {
 
   name: 'Player',
 
+  components: {
+    VueSlider
+  },
+
   data () {
     return {
       playing: false,
-      paused: false,
       currentTime: 0,
       totalTime: 0,
       name: '',
-      visibilityTimeout: null
+      visibilityTimeout: null,
+      seekTimeout: null,
+      seekTime: 0,
+      buffering: false,
+      bufferPercent: 0
     }
   },
 
   computed: {
+    playerProgress () {
+      return isNaN(this.currentTime / (this.totalTime / 100)) ? 0 : this.currentTime / (this.totalTime / 100)
+    },
     streamItem () {
       return this.$store.getters.streamItem
     },
     playerControlVisibility () {
       return this.$store.getters.playerControlVisibility
+    },
+    paused () {
+      return this.$store.getters.isStreamPaused
     },
     progressPosition () {
       return 'translateX(-' + (100 - (this.currentTime / (this.totalTime / 100))) + '%)'
@@ -68,19 +111,20 @@ export default {
     },
     streamItem: {
       handler: function (streamObject, oldStreamObject) {
-        if (oldStreamObject.url == streamObject.url) return
-
         if (streamObject.url === '') {
-          this.paused = false
+          this.$store.dispatch('toggleStreamPlayPause', false)
           this.currentTime = 0
           this.totalTime = 0
           this.name = ''
-          webapis.avplay.close()
           this.playing = false
+          webapis.avplay.close()
           return
         }
 
+        if (oldStreamObject.url == streamObject.url) return
+
         this.playing = true
+        this.buffering = true
         this.name = streamObject.name
 
         var vm = this
@@ -98,26 +142,68 @@ export default {
         }, 500)
       },
       deep: true
+    },
+    paused: function (value) {
+      if (value === true) {
+        webapis.avplay.pause()
+      } else {
+        webapis.avplay.play()
+        this.rescheduleHide()
+      }
     }
   },
 
   methods: {
+    focusSlider() {
+      console.log('FOCUS SLIDER!!!')
+      this.$refs['slider'].focus()
+    },
+    blurSlider() {
+      this.$refs['slider'].blur()
+    },
+    progressFormatter (val) {
+      return this.msToTime(this.totalTime / 100 * this.playerProgress)
+      //return this.playerProgress + '%'
+    },
     togglePlay () {
-      if (this.paused) {
-        webapis.avplay.play()
-        this.paused = false
-      } else {
-        webapis.avplay.pause()
-        this.paused = true
-      }
+      this.$store.dispatch('toggleStreamPlayPause')
     },
     rescheduleHide () {
       clearTimeout(this.visibilityTimeout)
-      if (!this.paused) {
-        var vm = this
-        this.visibilityTimeout = setTimeout(function () {
+      var vm = this
+      this.visibilityTimeout = setTimeout(function () {
+        if (!vm.paused) {
           vm.$store.dispatch('hideControls')
-        }, 5000)
+        }
+      }, 5000)
+    },
+    seek (value) {
+      var vm = this
+      this.seekTime += value
+      clearTimeout(this.seekTimeout)
+      this.seekTimeout = setTimeout(function () {
+        try {
+          console.log(vm.seekTime)
+          if (vm.seekTime > 0) {
+            webapis.avplay.jumpForward(vm.seekTime * 1000)
+          } else {
+            webapis.avplay.jumpBackward(Math.abs(vm.seekTime) * 1000)
+          }
+        } catch {}
+        vm.seekTime = 0
+      }, 500)
+    },
+    onButtonClicked (action) {
+      switch (action) {
+        case 'playPause':
+          this.togglePlay()
+          break
+        case 'seekForward':
+          this.seek(5)
+          break
+        case 'seekBackward':
+          this.seek(-5)
+          break
       }
     },
     onButtonFocused () {
@@ -132,13 +218,17 @@ export default {
     },
     onbufferingstart () {
       console.log("Buffering start.")
+      this.buffering = true
     },
     onbufferingprogress (percent) {
       console.log("Buffering progress data : " + percent)
+      this.bufferPercent = percent
     },
     onbufferingcomplete () {
       console.log("Buffering complete.")
       console.log(webapis.avplay.getDuration())
+      this.buffering = false
+      this.buffering = 0
       this.totalTime = webapis.avplay.getDuration()
     },
     oncurrentplaytime (currentTime) {
@@ -177,6 +267,7 @@ export default {
 }
 #av-player {
   position: absolute;
+  background: #000000;
 }
 #player, #av-player {
   left: 0;
@@ -190,94 +281,176 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 11;
-  background: #333333;
+  z-index: 12;
   display: flex;
   flex-direction: column;
-  height: 80px;
+  height: 200px;
+  background: linear-gradient(0deg, rgba(0,0,0,0.6) 0%,rgba(0,0,0,0) 100%);
+  opacity: 0;
+  will-change: transform, opacity;
+  transform: translateY(100%);
+  transition: .2s linear;
 }
-#player .controls .progress {
-  width: 100%;
-  height: 4px;
-  background: #F72F2F;
-  transform: translateX(-100%);
-  will-change: transform;
+#player .controls.show {
+  transition: .2s linear;
+  transform: translateY(0);
+  opacity: 1;
 }
 #player .controls .control {
   display: flex;
   align-items: center;
   justify-content: center;
   flex: 1;
+  position: relative;
+}
+#player .controls .control p {
+  font-size: 20px;
+  margin-bottom: 50px;
+  color: #ffffff;
 }
 #player .controls .control .title {
   position: absolute;
-  left: 30px;
-  line-height: 76px;
-  font-size: 22px;
+  left: 32px;
+  top: 0;
+  bottom: 0;
+  font-size: 32px;
+  display: flex;
+  align-items: center;
+  text-align: left;
+  max-width: 700px;
 }
 #player .controls .control .time {
   position: absolute;
   right: 30px;
-  line-height: 76px;
+  line-height: 46px;
   font-size: 22px;
 }
 #player .controls .control .player-buttons {
   margin-top: 4px;
+  margin-left: 10px;
+  margin-right: 10px;
+  display: flex;
+  align-self: stretch;
+  align-items: center;
 }
 #player .controls .control .player-button {
   position: relative;
-  margin: 0 10px;
-  font-size: 2.5rem;
+  margin-bottom: 35px;
+  font-size: 2.2rem;
   background: transparent;
   border: 0;
-  color: #D7D7D7;
+  color: #ffffff;
   outline: none;
-}
-#player .controls .control .player-button::before {
-  content: "";
-  position: absolute;
-  top:-10px;
-  left:50%;
-  transform: translateX(-50%);
-  border-width: 4px 6px 0 6px;
-  border-style: solid;
-  border-color: #ffffff transparent transparent transparent;
-  z-index: 99;
-  opacity:0;
+  width: 90px;
+  height: 90px;
 }
 #player .controls .control .player-button::after {
   content: attr(tooltip);
   position: absolute;
-  left:50%;
-  top:-10px;
-  transform: translateX(-50%) translateY(-100%);
-  background: #ffffff;
-  text-align: center;
-  color: #000;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(120%);
   font-size: 20px;
-  min-width: 80px;
-  border-radius: 5px;
-  pointer-events: none;
-  padding: 8px 4px;
-  z-index:99;
-  opacity:0;
+  visibility: hidden;
 }
 #player .controls .control .player-button:hover,
 #player .controls .control .player-button:focus {
-  color: #ffffff;
-}
-#player .controls .control .player-button:hover svg,
-#player .controls .control .player-button:focus svg {
-  filter: drop-shadow(12px 12px 5px rgba(0,0,0,0.5));
-}
-#player .controls .control .player-button.flipped:hover svg,
-#player .controls .control .player-button.flipped:focus svg {
-  filter: drop-shadow(-12px 12px 5px rgba(0,0,0,0.5));
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
 }
 #player .controls .control .player-button:hover::after,
-#player .controls .control .player-button:hover::before,
-#player .controls .control .player-button:focus::after,
-#player .controls .control .player-button:focus::before {
-   opacity:1
+#player .controls .control .player-button:focus::after {
+  visibility: visible;
+}
+
+.vueprogress {
+  margin: 0 auto;
+  margin-top: 8px;
+}
+
+.vue-slider-dot-handle {
+  background: red;
+}
+
+@keyframes loadinganim {
+  0% {
+    transform: rotate(360deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+#playerLoader {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000;
+  color: white;
+  text-align: center;
+  z-index: 11;
+}
+#playerLoader #loading {
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  vertical-align: middle;
+  font-family: helvetica, sans-serif;
+  position: relative;
+}
+#playerLoader #loading .bulletouter {
+  animation: loadinganim 1.3s infinite;
+  animation-timing-function: linear;
+  animation-direction: reverse;
+  width: 75px;
+  height: 75px;
+  background: white;
+  border-radius: 50%;
+  margin: 0 auto;
+}
+#playerLoader #loading .bulletouter .bulletinner {
+  position: relative;
+  left: -7.5px;
+  width: 67.5px;
+  height: 67.5px;
+  background: #000;
+  border-radius: 50%;
+  margin: 0 auto;
+}
+#playerLoader #loading .bulletouter .mask {
+  position: relative;
+  left: -7.5px;
+  top: -22.5px;
+  width: 75px;
+  height: 37.5px;
+  background: #000;
+  transform: rotate(45deg);
+}
+#playerLoader #loading .bulletouter .dot {
+  position: relative;
+  left: 49.5px;
+  top: -48px;
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+}
+#playerLoader #loading p {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 75px;
+  height: 75px;
+  margin: 0;
+  padding: 0;
+  line-height: 75px;
+  text-align: center;
+  z-index: 1;
+  font-size: 18px;
 }
 </style>
