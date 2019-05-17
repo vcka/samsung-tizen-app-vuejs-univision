@@ -13,7 +13,7 @@
       </RecycleScroller>
     </template>
     <template v-else>
-      <div class="scroller normalRow">
+      <div class="scroller normalRow" :class="{category: item.contains == 'category'}">
         <div class="item" tabIndex="0" :key="'normalRow-' + index" v-for="(item, index) in item.list" :data-index="index" @keyup.enter="onItemClicked(item, index)" @click="onItemClicked(item, index)" @focus="onItemFocused(item, index)" :class="{lastFocused: focusedItemIndex == index}">
           <img :src="fullSrc(item.poster)" alt="">
         </div>
