@@ -5,11 +5,20 @@
       <h2 class="total">{{ focusedItemIndex + 1 }} of {{ item.list.length }}</h2>
     </div>
 
-    <RecycleScroller class="scroller" :class="{category: item.contains == 'category'}" keyField="uid" :items="item.list" direction="horizontal" :item-size="item.contains == 'category' ? 373 : 224" v-slot="{item, index}">
-      <div class="item" tabIndex="0" :data-index="index" @keyup.enter="onItemClicked(item, index)" @click="onItemClicked(item, index)" @focus="onItemFocused(item, index)" :class="{lastFocused: focusedItemIndex == index}">
-        <img :src="fullSrc(item.poster)" alt="">
+    <template v-if="(item.contains == 'category' && item.list.length > itemsPerRowCategory) || (item.contains != 'category' && item.list.length > itemsPerRowNormal)">
+      <RecycleScroller class="scroller" :class="{category: item.contains == 'category'}" keyField="uid" :items="item.list" direction="horizontal" :item-size="item.contains == 'category' ? itemWidthCategory : itemWidthNormal" v-slot="{item, index}">
+        <div class="item" tabIndex="0" :data-index="index" @keyup.enter="onItemClicked(item, index)" @click="onItemClicked(item, index)" @focus="onItemFocused(item, index)" :class="{lastFocused: focusedItemIndex == index}">
+          <img :src="fullSrc(item.poster)" alt="">
+        </div>
+      </RecycleScroller>
+    </template>
+    <template v-else>
+      <div class="scroller normalRow">
+        <div class="item" tabIndex="0" :key="'normalRow-' + index" v-for="(item, index) in item.list" :data-index="index" @keyup.enter="onItemClicked(item, index)" @click="onItemClicked(item, index)" @focus="onItemFocused(item, index)" :class="{lastFocused: focusedItemIndex == index}">
+          <img :src="fullSrc(item.poster)" alt="">
+        </div>
       </div>
-    </RecycleScroller>
+    </template>
   </div>
 </template>
 
@@ -40,6 +49,13 @@ export default {
     onItemClicked (item, itemIndex) {
       this.$emit('itemClicked', item, this.index, itemIndex, 'recycler')
     }
+  },
+
+  created () {
+    this.itemWidthCategory = 373
+    this.itemWidthNormal = 224
+    this.itemsPerRowCategory = 5
+    this.itemsPerRowNormal = 8
   }
 }
 </script>
@@ -70,7 +86,9 @@ export default {
     height: 220px;
   }
 
+  .scroller,
   .vue-recycle-scroller.scroller.direction-horizontal:not(.page-mode) {
+    display: flex;
     padding-left: 60px;
     padding-right: 60px;
     height: 300px;
@@ -78,12 +96,12 @@ export default {
     overflow: hidden;
   }
 
-  .scroller,
   .row .vue-recycle-scroller.direction-horizontal .vue-recycle-scroller__item-wrapper,
   .row .vue-recycle-scroller.ready.direction-horizontal .vue-recycle-scroller__item-view {
     height: 259px;
   }
 
+  .scroller,
   .row .vue-recycle-scroller.direction-horizontal .vue-recycle-scroller__item-wrapper {
     overflow: visible;
   }

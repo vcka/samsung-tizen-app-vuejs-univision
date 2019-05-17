@@ -89,7 +89,7 @@ export default {
           if (nextRow) {
             this.rowList.scrollTop = this.rowList.scrollTop - this.rowList.offsetTop + nextRow.getBoundingClientRect().top
             vm.scrolling = false
-            nextRow.lastChild.firstElementChild.querySelector('.item.lastFocused').focus()
+            nextRow.lastChild.querySelector('.item.lastFocused').focus()
           } else {
             vm.scrolling = false
             if (event.keyCode == 38) {
@@ -99,58 +99,65 @@ export default {
         } else if (event.keyCode == 39 || event.keyCode == 37) {
           event.preventDefault()
           //vm.scrolling = true
-          this.scroller = activeElement.closest('.vue-recycle-scroller')
-          var itemWidth = this.scroller.classList.contains('category') ? this.itemWidthCategory : this.itemWidthNormal
-          this.activeElementTransformNum = parseInt(activeElement.parentNode.style.transform.split("(")[1].split("px")[0])
-          if (event.keyCode == 39) {
-            if (this.activeElementTransformNum == this.scroller.scrollWidth - itemWidth - this.scrollerPaddingLeft) return
-
-            this.scroller.scrollLeft += itemWidth
-
-            this.nextItem = null
-            this.maxWhile = activeElement.parentNode.parentNode.children.length
-            while (this.maxWhile > 0) {
-              this.nextItem = this.nextItem || activeElement.parentNode
-              this.nextItem = this.nextItem.nextElementSibling || this.nextItem.parentNode.firstElementChild
-
-              this.nextItemTransformNum = parseInt(this.nextItem.style.transform.split("(")[1].split("px")[0])
-
-              if (this.nextItemTransformNum == this.activeElementTransformNum + itemWidth) {
-                if (this.nextItemTransformNum >= 0) {
-                  this.nextItem.firstChild.focus()
-                }
-                break
-              }
-              this.maxWhile--
+          if (activeElement.parentNode.classList.contains('normalRow')) {
+            this.nextItem = (event.keyCode == 39) ? activeElement.nextElementSibling : activeElement.previousElementSibling
+            if (this.nextItem) {
+              this.nextItem.focus()
             }
           } else {
-            if (this.activeElementTransformNum == 0) return
+            this.scroller = activeElement.closest('.vue-recycle-scroller')
+            var itemWidth = this.scroller.classList.contains('category') ? this.itemWidthCategory : this.itemWidthNormal
+            this.activeElementTransformNum = parseInt(activeElement.parentNode.style.transform.split("(")[1].split("px")[0])
+            if (event.keyCode == 39) {
+              if (this.activeElementTransformNum == this.scroller.scrollWidth - itemWidth - this.scrollerPaddingLeft) return
 
-            this.found = false
-            this.nextItem = null
-            this.maxWhile = activeElement.parentNode.parentNode.children.length
-            while (this.maxWhile > 0) {
-              this.nextItem = this.nextItem || activeElement.parentNode
-              this.nextItem = this.nextItem.previousElementSibling || this.nextItem.parentNode.lastChild
+              this.scroller.scrollLeft += itemWidth
 
-              this.nextItemTransformNum = parseInt(this.nextItem.style.transform.split("(")[1].split("px")[0])
+              this.nextItem = null
+              this.maxWhile = activeElement.parentNode.parentNode.children.length
+              while (this.maxWhile > 0) {
+                this.nextItem = this.nextItem || activeElement.parentNode
+                this.nextItem = this.nextItem.nextElementSibling || this.nextItem.parentNode.firstElementChild
 
-              if (this.nextItemTransformNum == this.activeElementTransformNum - itemWidth) {
-                if (this.nextItemTransformNum >= 0) {
-                  this.found = true
+                this.nextItemTransformNum = parseInt(this.nextItem.style.transform.split("(")[1].split("px")[0])
+
+                if (this.nextItemTransformNum == this.activeElementTransformNum + itemWidth) {
+                  if (this.nextItemTransformNum >= 0) {
+                    this.nextItem.firstChild.focus()
+                  }
+                  break
                 }
-                break
+                this.maxWhile--
               }
-              this.maxWhile--
-            }
+            } else {
+              if (this.activeElementTransformNum == 0) return
 
-            if (this.found) {
-              var itemsPerRow = this.scroller.classList.contains('category') ? this.itemsPerRowCategory : this.itemsPerRowNormal
-              var totalItems = (this.scroller.scrollWidth - this.scrollerPaddingLeft) / itemWidth
-              if (totalItems - itemsPerRow > this.nextItem.firstChild.dataset.index) {
-                this.scroller.scrollLeft -= itemWidth - activeElement.parentNode.getBoundingClientRect().left + this.scrollerPaddingLeft
+              this.found = false
+              this.nextItem = null
+              this.maxWhile = activeElement.parentNode.parentNode.children.length
+              while (this.maxWhile > 0) {
+                this.nextItem = this.nextItem || activeElement.parentNode
+                this.nextItem = this.nextItem.previousElementSibling || this.nextItem.parentNode.lastChild
+
+                this.nextItemTransformNum = parseInt(this.nextItem.style.transform.split("(")[1].split("px")[0])
+
+                if (this.nextItemTransformNum == this.activeElementTransformNum - itemWidth) {
+                  if (this.nextItemTransformNum >= 0) {
+                    this.found = true
+                  }
+                  break
+                }
+                this.maxWhile--
               }
-              this.nextItem.firstChild.focus()
+
+              if (this.found) {
+                var itemsPerRow = this.scroller.classList.contains('category') ? this.itemsPerRowCategory : this.itemsPerRowNormal
+                var totalItems = (this.scroller.scrollWidth - this.scrollerPaddingLeft) / itemWidth
+                if (totalItems - itemsPerRow > this.nextItem.firstChild.dataset.index) {
+                  this.scroller.scrollLeft -= itemWidth - activeElement.parentNode.getBoundingClientRect().left + this.scrollerPaddingLeft
+                }
+                this.nextItem.firstChild.focus()
+              }
             }
           }
         }
