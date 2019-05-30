@@ -1,6 +1,7 @@
 <template>
   <div id="player" v-show="playing">
-    <object id="av-player" type="application/avplayer"></object>
+    <av-player v-if="useAvPlayer" ref="player"></av-player>
+    <hls-player v-else ref="player"></hls-player>
     <div id="playerLoader" v-show="buffering">
       <div id="loading">
         <p>{{ bufferPercent }}</p>
@@ -53,12 +54,16 @@
 <script>
 import VueSlider from 'vue-slider-component'
 import 'vue-slider-component/theme/default.css'
+import HlsPlayer from '@/components/HlsPlayer.vue'
+import AvPlayer from '@/components/AvPlayer.vue'
 export default {
 
   name: 'Player',
 
   components: {
-    VueSlider
+    VueSlider,
+    HlsPlayer,
+    AvPlayer
   },
 
   data () {
@@ -77,7 +82,8 @@ export default {
 
   computed: {
     playerProgress () {
-      return isNaN(this.currentTime / (this.totalTime / 100)) ? 0 : this.currentTime / (this.totalTime / 100)
+      var progress = isNaN(this.currentTime / (this.totalTime / 100)) ? 0 : this.currentTime / (this.totalTime / 100)
+      return Math.min(100, progress)
     },
     streamItem () {
       return this.$store.getters.streamItem
@@ -102,9 +108,8 @@ export default {
   watch: {
     playerControlVisibility: function (show) {
       if (show) {
-        var vm = this
-        vm.$nextTick(function () {
-          vm.$refs['playButton'].focus()
+        this.$nextTick(() => {
+          this.$refs['playButton'].focus()
         })
         this.rescheduleHide()
       }
@@ -117,7 +122,7 @@ export default {
           this.totalTime = 0
           this.name = ''
           this.playing = false
-          webapis.avplay.close()
+          this.$refs['player'].close()
           return
         }
 
@@ -127,27 +132,19 @@ export default {
         this.buffering = true
         this.name = streamObject.name
 
-        var vm = this
-        setTimeout(function () {
-          var state = webapis.avplay.getState()
-          if (state == 'PLAYING' || state == 'PAUSED') {
-            webapis.avplay.close()
-          }
-          webapis.avplay.open(streamObject.url)
-          webapis.avplay.setDisplayRect(0, 0, 1920, 1080)
-          webapis.avplay.setListener(vm.listeners)
-
-          webapis.avplay.prepare()
-          webapis.avplay.play()
-        }, 500)
+        console.log(streamObject.url)
+        console.log(this.$refs['player'])
+        this.$refs['player'].play(streamObject.url)
       },
       deep: true
     },
     paused: function (value) {
       if (value === true) {
-        webapis.avplay.pause()
+        this.$refs['player'].pause()
+        //webapis.avplay.pause()
       } else {
-        webapis.avplay.play()
+        this.$refs['player'].resume()
+        //webapis.avplay.play()
         this.rescheduleHide()
       }
     }
@@ -161,7 +158,7 @@ export default {
     blurSlider() {
       this.$refs['slider'].blur()
     },
-    progressFormatter (val) {
+    progressFormatter () {
       return this.msToTime(this.totalTime / 100 * this.playerProgress)
       //return this.playerProgress + '%'
     },
@@ -170,28 +167,20 @@ export default {
     },
     rescheduleHide () {
       clearTimeout(this.visibilityTimeout)
-      var vm = this
-      this.visibilityTimeout = setTimeout(function () {
-        if (!vm.paused) {
-          vm.$store.dispatch('hideControls')
+      this.visibilityTimeout = setTimeout(() => {
+        if (!this.paused) {
+          this.$store.dispatch('hideControls')
         }
       }, 5000)
     },
     seek (value) {
-      var vm = this
       this.seekTime += value
+      this.rescheduleHide()
       clearTimeout(this.seekTimeout)
-      this.seekTimeout = setTimeout(function () {
-        try {
-          console.log(vm.seekTime)
-          if (vm.seekTime > 0) {
-            webapis.avplay.jumpForward(vm.seekTime * 1000)
-          } else {
-            webapis.avplay.jumpBackward(Math.abs(vm.seekTime) * 1000)
-          }
-        } catch {}
-        vm.seekTime = 0
-      }, 500)
+      this.seekTimeout = setTimeout(() => {
+        this.$refs['player'].seek(this.seekTime)
+        this.seekTime = 0
+      }, 1000)
     },
     onButtonClicked (action) {
       switch (action) {
@@ -199,10 +188,10 @@ export default {
           this.togglePlay()
           break
         case 'seekForward':
-          this.seek(5)
+          if (!this.buffering) this.seek(5)
           break
         case 'seekBackward':
-          this.seek(-5)
+          if (!this.buffering) this.seek(-5)
           break
       }
     },
@@ -228,7 +217,7 @@ export default {
       console.log("Buffering complete.")
       console.log(webapis.avplay.getDuration())
       this.buffering = false
-      this.buffering = 0
+      this.bufferingPercent = 0
       this.totalTime = webapis.avplay.getDuration()
     },
     oncurrentplaytime (currentTime) {
@@ -248,15 +237,30 @@ export default {
   },
 
   mounted () {
-    this.listeners = {
-      onbufferingstart: this.onbufferingstart,
-      onbufferingprogress: this.onbufferingprogress,
-      onbufferingcomplete: this.onbufferingcomplete,
-      oncurrentplaytime: this.oncurrentplaytime,
-      onevent: this.onevent,
-      onstreamcompleted: this.onstreamcompleted,
-      onerror: this.onerror,
-    }
+    this.$refs['player'].$on('buffering', (percentage) => {
+      this.buffering = true
+      this.bufferPercent = percentage
+    })
+    this.$refs['player'].$on('playing', () => {
+      this.buffering = false
+      this.bufferPercent = 0
+    })
+    this.$refs['player'].$on('totaldurationupdated', (duration) => {
+      this.totalTime = duration
+      console.log('loaded', duration)
+    })
+    this.$refs['player'].$on('timeupdated', (currentTime) => {
+      this.currentTime = currentTime
+    })
+    this.$refs['player'].$on('completed', () => {
+      this.$store.dispatch('closeStream')
+      document.querySelector('.sourceModal .button.lastFocused').focus()
+    })
+  },
+
+  created () {
+    this.useAvPlayer = navigator.userAgent.toLowerCase().indexOf('tizen') > -1
+    console.log('Using AVPlay', this.useAvPlayer)
   }
 }
 </script>
@@ -304,7 +308,7 @@ export default {
   position: relative;
 }
 #player .controls .control p {
-  font-size: 20px;
+  font-size: 26px;
   margin-bottom: 50px;
   color: #ffffff;
 }

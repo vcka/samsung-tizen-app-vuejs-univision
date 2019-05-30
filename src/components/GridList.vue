@@ -6,7 +6,7 @@
     </div>
 
     <RecycleScroller class="grid-scroll-container" key-field="id" :items="chunkedItems" :item-size="itemSize" v-slot="{item, index}">
-      <div class="grid-item" tabindex="0" :data-index="columnIndex" :key="'gridItem-' + index + '-' + columnIndex" v-for="(gridItem, columnIndex) in item.items" @click="onItemClicked(gridItem, index, columnIndex)" @keyup.enter="onItemClicked(gridItem, index, columnIndex)" @focus="onItemFocused(gridItem, index * size + columnIndex)" :class="{lastFocused: focusedItemIndex == index * size + columnIndex}">
+      <div class="item grid-item" tabindex="0" :data-index="columnIndex" :key="'gridItem-' + index + '-' + columnIndex" v-for="(gridItem, columnIndex) in item.items" @click="onItemClicked(gridItem, index, columnIndex)" @keyup.enter="onItemClicked(gridItem, index, columnIndex)" @focus="onItemFocused(gridItem, index * size + columnIndex)" :class="{lastFocused: focusedItemIndex == index * size + columnIndex}">
         <img :src="fullSrc(gridItem.poster)" alt="">
         <div class="vertically-centered"><p>{{ gridItem.name }}</p></div>
       </div>
@@ -57,7 +57,7 @@ export default {
 
   methods: {
     fullSrc (src) {
-      return 'http://192.168.2.88:8001' + src
+      return process.env.VUE_APP_API_SERVER + src
     },
     onItemClicked (item, itemRowIndex, itemColumnIndex) {
       this.$emit('itemClicked', item, itemRowIndex, itemColumnIndex, 'grid')

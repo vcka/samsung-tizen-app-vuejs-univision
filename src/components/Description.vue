@@ -65,7 +65,7 @@ export default {
         }).then((data) => {
           this.moviedbFetching = false
           if (data.results.length == 0) {
-            this.backgroundUrl = "url(" + "http://192.168.2.88:8001" + focusedItem.poster + ")"
+            this.backgroundUrl = "url(" + process.env.VUE_APP_API_SERVER + focusedItem.poster + ")"
             this.backgroundDownloading = false
             this.moviedbNoBackdrop = true
             this.movieRating = 0
@@ -94,7 +94,7 @@ export default {
             }
             img.src = "https://image.tmdb.org/t/p/w1280" + result.backdrop_path
           } else {
-            this.backgroundUrl = "url(" + "http://192.168.2.88:8001" + focusedItem.poster + ")"
+            this.backgroundUrl = "url(" + process.env.VUE_APP_API_SERVER + focusedItem.poster + ")"
             this.backgroundDownloading = false
             this.moviedbNoBackdrop = true
           }

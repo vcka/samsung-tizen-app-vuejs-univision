@@ -6,7 +6,7 @@
         <div class="lds-ripple" v-show="loading">
           <div></div><div></div>
         </div>
-        <div class="button" :key="index" v-for="(episode, index) in episodes" tabindex="0" @keyup.enter="onButtonClick(episode, index)" @click="onButtonClick(episode, index)">
+        <div class="button dialogButton" :key="index" v-for="(episode, index) in episodes" tabindex="0" @keyup.enter="onButtonClick(episode, index)" @click="onButtonClick(episode, index)">
           <span>{{ index+1 + ') ' }}</span>{{ episode.name }}
         </div>
         <div class="more">
@@ -51,12 +51,11 @@ export default {
   },
 
   created () {
-    var vm = this
     this.loading = true
     var postData = {
       episodesContentInfoIds: this.myItem.contentInfoIds
     }
-    fetch('http://192.168.2.88:8001' + this.myItem.post_url, {
+    fetch(process.env.VUE_APP_API_SERVER + this.myItem.post_url, {
       method: 'POST',
       body: JSON.stringify(postData),
       headers: {
@@ -64,14 +63,14 @@ export default {
       }
     }).then(function (response) {
       return response.json()
-    }).then(function (data) {
-      vm.episodes = data['episodes']
-      vm.loading = false
-      vm.$nextTick(function () {
-        vm.$refs['seriesButtons'].getElementsByClassName('button')[0].focus()
+    }).then((data) => {
+      this.episodes = data['episodes']
+      this.loading = false
+      this.$nextTick(() => {
+        this.$refs['seriesButtons'].getElementsByClassName('button')[0].focus()
       })
-    }).catch(function () {
-      vm.loading = false
+    }).catch(() => {
+      this.loading = false
     })
   },
 

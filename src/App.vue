@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <div id="logtest"></div>
+    <div id="keyPressDebug"></div>
     <Player/>
     <router-view/>
   </div>
@@ -24,31 +24,28 @@ export default {
 
   methods: {
     focusNextItem () {
-      document.getElementById("logtest").innerHTML = event.keyCode
+      document.getElementById("keyPressDebug").innerHTML = event.keyCode
+
+      // Back button pressed
       // Using "\" 220 key as a back button for debugging (since we're using vue-router abstract mode)
       if (event.keyCode == 10009 || event.keyCode == 220) {
-        var state = ''
-        try {
-          state = webapis.avplay.getState()
-        } catch {
-        }
-        var playerVisible = document.getElementById('player').style.display != 'none'
-        var playerControlsVisible = this.$store.getters.playerControlVisibility
+        var playerIsVisible = document.getElementById('player').style.display != 'none'
+        var playerControlIsVisible = this.$store.getters.playerControlVisibility
         
-        if (playerVisible && !playerControlsVisible && (state == 'PLAYING' || state == 'PAUSED')) {
+        if (playerIsVisible && !playerControlIsVisible) {
           this.$store.dispatch('closeStream')
           document.querySelector('.sourceModal .button.lastFocused').focus()
           return
         }
 
-        if (playerControlsVisible) {
+        if (playerControlIsVisible) {
           this.$store.dispatch('hideControls')
           return
         }
 
-        if (this.$route.name == 'browselist' && this.$route.path == '/') {
+        if (this.$route.name === 'browselist' && this.$route.path === '/') {
           var choice = confirm('Are you sure you want to exit?')
-          if (choice == true) {
+          if (choice === true) {
             try {
               tizen.application.getCurrentApplication().exit()
             } catch {
@@ -60,16 +57,13 @@ export default {
         }
         return
       }
+
       // Play/Pause key pressed
       if (event.keyCode == 10252) {
         this.$store.dispatch('toggleStreamPlayPause')
         return
       }
-      if (this.scrolling) {
-        return
-      }
 
-      var vm = this
       var activeElement = document.activeElement
 
       // Player handling
@@ -103,26 +97,22 @@ export default {
       }
 
       // Browse handling
-      if (activeElement.classList.contains('item')) {
+      if (activeElement.classList.contains('rowItem')) {
         if (event.keyCode == 40 || event.keyCode == 38) {
           event.preventDefault()
-          vm.scrolling = true
           this.rowList = document.getElementById('rowlist')
           var currentRow = activeElement.closest('.row')
           var nextRow = (event.keyCode == 40) ? currentRow.nextElementSibling : currentRow.previousElementSibling
           if (nextRow) {
             this.rowList.scrollTop = this.rowList.scrollTop - this.rowList.offsetTop + nextRow.getBoundingClientRect().top
-            vm.scrolling = false
-            nextRow.lastChild.querySelector('.item.lastFocused').focus()
+            nextRow.lastChild.querySelector('.rowItem.lastFocused').focus()
           } else {
-            vm.scrolling = false
             if (event.keyCode == 38) {
               document.getElementsByClassName('search')[0].focus()
             }
           }
         } else if (event.keyCode == 39 || event.keyCode == 37) {
           event.preventDefault()
-          //vm.scrolling = true
           if (activeElement.parentNode.classList.contains('normalRow')) {
             this.nextItem = (event.keyCode == 39) ? activeElement.nextElementSibling : activeElement.previousElementSibling
             if (this.nextItem) {
@@ -188,18 +178,28 @@ export default {
         return
       }
 
-      // Search screen handling
+      // Search screen, grid browse handling
       if (activeElement.classList.contains('grid-item')) {
-        if (event.keyCode == 40 || event.keyCode == 38) {
+        if ([37, 38, 39, 40].indexOf(event.keyCode) > -1) {
           event.preventDefault()
+        }
+
+        // Left, Right
+        if (event.keyCode === 39 || event.keyCode === 37) {
+          this.nextItem = event.keyCode == 39 ? activeElement.nextElementSibling : activeElement.previousElementSibling
+          if (this.nextItem && this.nextItem.classList.contains('grid-item')) {
+            this.nextItem.focus()
+          }
+        }
+
+        // Up, Down
+        if (event.keyCode === 40 || event.keyCode === 38) {
           this.scroller = activeElement.closest('.vue-recycle-scroller')
           this.activeElementTransformNum = parseInt(activeElement.parentNode.style.transform.split("(")[1].split("px")[0])
           var onSearchScreen = this.scroller.parentNode.parentNode.id == 'search-screen'
           var itemHeight = onSearchScreen ? 405 : 315
           if (event.keyCode == 40) {
-            console.log('ya')
             if (this.activeElementTransformNum == this.scroller.scrollHeight - itemHeight - 60) return
-            console.log('scroll!')
             this.scroller.scrollTop += itemHeight
 
             this.nextItem = null
@@ -253,18 +253,13 @@ export default {
               this.nextItem.children[activeElement.dataset.index].focus()
             }
           }
-        } else if (event.keyCode == 39 || event.keyCode == 37) {
-          event.preventDefault()
-          this.nextItem = event.keyCode == 39 ? activeElement.nextElementSibling : activeElement.previousElementSibling
-          if (this.nextItem && this.nextItem.classList.contains('grid-item')) {
-            this.nextItem.focus()
-          }
         }
+
         return
       }
 
-      // Other handling
-      if (activeElement.classList.contains('button') && (event.keyCode == 40 || event.keyCode == 38)) {
+      // Dialog modal
+      if (activeElement.classList.contains('dialogButton') && (event.keyCode == 40 || event.keyCode == 38)) {
         event.preventDefault()
         var nextButton = (event.keyCode == 40) ? activeElement.nextElementSibling : activeElement.previousElementSibling
         if (nextButton) {
@@ -272,26 +267,25 @@ export default {
         }
         return
       }
+
+      // Search button on home/browse page
       if (activeElement.classList.contains('search') && event.keyCode == 40) {
         event.preventDefault()
-        // fastest method to find by data atrribute
         this.rowList = document.getElementById('rowlist')
-        if (this.rowList.firstElementChild.classList.contains('singleCatGrid')) {
-          this.rowList.querySelector('.grid-item.lastFocused').focus()
-        } else {
-          this.rowList.querySelector('.item.lastFocused').focus()
-        }
+        this.rowList.querySelector('.item.lastFocused').focus()
         return
       }
+
+      // Search text input handling
       if (activeElement.classList.contains('searchInput') && event.keyCode == 40) {
         event.preventDefault()
-        document.querySelector('#search-screen .grid-item.lastFocused').focus()
+        document.querySelector('#search-screen .item.lastFocused').focus()
         return
       }
     },
     deepLink () {
-      console.log('deepLink')
-      if (typeof(tizen) == 'undefined' || this.$route.name != 'browselist') return
+      // Smart Hub Preview deep link handling
+      if (typeof(tizen) === 'undefined' || this.$route.name !== 'browselist') return
       var requestedAppControl = tizen.application.getCurrentApplication().getRequestedAppControl()
       if (requestedAppControl) {
         var appControlData = requestedAppControl.appControl.data
@@ -315,11 +309,15 @@ export default {
 
   mounted () {
     try {
-      tizen.tvinputdevice.registerKey("MediaPlayPause")
-    } catch {}
-    document.addEventListener("keydown", this.focusNextItem)
+      tizen.tvinputdevice.registerKey('MediaPlayPause')
+    } catch {
+      // empty
+    }
+    document.addEventListener('keydown', this.focusNextItem)
     window.addEventListener('appcontrol', this.deepLink)
     this.$router.push('/')
+
+    // deep link handling app cold start
     this.deepLink()
   },
 
@@ -504,7 +502,7 @@ h1, h2, h3, h4 {
   }
 }
 
-#logtest {
+#keyPressDebug {
   position: absolute;
   color: red;
   z-index: 100;

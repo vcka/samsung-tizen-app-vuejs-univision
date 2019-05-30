@@ -51,12 +51,6 @@ export default new Router({
           ]
         }
       ]
-    },
-    {
-      path: '/movie/:movieId',
-      name: 'rootmovie',
-      component: SourceDialog,
-      props: true
     }
   ]
 })

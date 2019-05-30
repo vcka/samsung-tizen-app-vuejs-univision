@@ -50,9 +50,11 @@ export default {
   },
   computed: {
     listUrl () {
-      var baseUrl = "http://192.168.2.88:8001/api/list/"
+      var baseUrl = process.env.VUE_APP_API_SERVER + '/api/list/'
       if (this.id) {
-        return baseUrl + this.id
+        baseUrl += this.id
+      } else {
+        baseUrl += '?age=21'
       }
       return baseUrl
     }
@@ -69,24 +71,24 @@ export default {
         }
       }
       if (to.name == 'browselist' && from.name == 'browselist') {
-        var vm = this
-        this.fetchList().then(function () {
+        this.fetchList().then(() => {
           if (restoreState) {
             console.log("RESTORE STATE!!!")
-            var rowScroller = vm.$refs['myRowList'].querySelector('.row:nth-child(' + (restoreState.fromRow + 1) + ') .vue-recycle-scroller')
-            vm.$refs['myRowList'].scrollTop = restoreState.fromScrollPositionTop
-            rowScroller.scrollLeft = restoreState.fromScrollPositionLeft
-
+            this.$refs['myRowList'].scrollTop = restoreState.fromScrollPositionTop;
+            var rowScroller = this.$refs['myRowList'].querySelector('.row:nth-child(' + (restoreState.fromRow + 1) + ') .scroller');
+            if (rowScroller.classList.contains('vue-recycle-scroller')) {
+              rowScroller.scrollLeft = restoreState.fromScrollPositionLeft;
+            }
             
             setTimeout(function () {
               rowScroller.querySelector('.item[data-index="' + (restoreState.fromColumn) + '"]').focus()
             }, 0)
-            vm.$store.commit('removeScrollState', to.fullPath)
+            this.$store.commit('removeScrollState', to.fullPath)
           } else {
-            if (vm.$refs['myRowList'].firstElementChild.classList.contains('singleCatGrid')) {
-              vm.$refs['myRowList'].querySelector('.grid-item').focus()
+            if (this.$refs['myRowList'].firstElementChild.classList.contains('singleCatGrid')) {
+              this.$refs['myRowList'].querySelector('.grid-item').focus()
             } else {
-              vm.$refs['myRowList'].querySelector('.item').focus()
+              this.$refs['myRowList'].querySelector('.item').focus()
             }
           }
         })
@@ -103,15 +105,14 @@ export default {
   methods: {
     fetchList () {
       console.log("Fetch", this.listUrl)
-      var vm = this
       this.loading = true
       return fetch(this.listUrl).then(function(response) {
         return response.json()
-      }).then(function(data) {
-        vm.items = data['data']
-        vm.loading = false
-      }).catch(function() {
-        vm.loading = false
+      }).then((data) => {
+        this.items = data['data']
+        this.loading = false
+      }).catch(() => {
+        this.loading = false
       });
     },
     urlCleanId (url) {
@@ -167,12 +168,14 @@ export default {
     }
   },
   created () {
-    var vm = this
-    this.fetchList().then(function () {
-      if (vm.$refs['myRowList'].firstElementChild.classList.contains('singleCatGrid')) {
-        vm.$refs['myRowList'].querySelector('.grid-item').focus()
-      } else {
-        vm.$refs['myRowList'].querySelector('.item').focus()
+    this.fetchList().then(() => {
+      // Route might have changed during fetch operation
+      if (this.$route.name === 'browselist') {
+        if (this.$refs['myRowList'].firstElementChild.classList.contains('singleCatGrid')) {
+          this.$refs['myRowList'].querySelector('.grid-item').focus()
+        } else {
+          this.$refs['myRowList'].querySelector('.item').focus()
+        }
       }
     })
   }

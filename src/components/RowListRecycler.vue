@@ -7,15 +7,15 @@
 
     <template v-if="(item.contains == 'category' && item.list.length > itemsPerRowCategory) || (item.contains != 'category' && item.list.length > itemsPerRowNormal)">
       <RecycleScroller class="scroller" :class="{category: item.contains == 'category'}" keyField="uid" :items="item.list" direction="horizontal" :item-size="item.contains == 'category' ? itemWidthCategory : itemWidthNormal" v-slot="{item, index}">
-        <div class="item" tabIndex="0" :data-index="index" @keyup.enter="onItemClicked(item, index)" @click="onItemClicked(item, index)" @focus="onItemFocused(item, index)" :class="{lastFocused: focusedItemIndex == index}">
+        <div class="item rowItem" tabIndex="0" :data-index="index" @keyup.enter="onItemClicked(item, index, true)" @click="onItemClicked(item, index, true)" @focus="onItemFocused(item, index)" :class="{lastFocused: focusedItemIndex == index}">
           <img :src="fullSrc(item.poster)" alt="">
         </div>
       </RecycleScroller>
     </template>
     <template v-else>
       <div class="scroller normalRow" :class="{category: item.contains == 'category'}">
-        <div class="item" tabIndex="0" :key="'normalRow-' + index" v-for="(item, index) in item.list" :data-index="index" @keyup.enter="onItemClicked(item, index)" @click="onItemClicked(item, index)" @focus="onItemFocused(item, index)" :class="{lastFocused: focusedItemIndex == index}">
-          <img :src="fullSrc(item.poster)" alt="">
+        <div class="item rowItem" tabIndex="0" :key="'normalRow-' + listIndex" v-for="(listItem, listIndex) in item.list" :data-index="listIndex" @keyup.enter="onItemClicked(listItem, listIndex, false)" @click="onItemClicked(listItem, listIndex, false)" @focus="onItemFocused(listItem, listIndex)" :class="{lastFocused: focusedItemIndex == listIndex}">
+          <img :src="fullSrc(listItem.poster)" alt="">
         </div>
       </div>
     </template>
@@ -38,7 +38,7 @@ export default {
 
   methods: {
     fullSrc (src) {
-      return "http://192.168.2.88:8001" + src
+      return process.env.VUE_APP_API_SERVER + src
     },
     onItemFocused (focusedItem, focusedItemIndex) {
       this.focusedItemIndex = focusedItemIndex
@@ -46,8 +46,8 @@ export default {
       //this.$root.$emit('itemFocused', focusedItem)
       this.$emit('itemFocused', this.index)
     },
-    onItemClicked (item, itemIndex) {
-      this.$emit('itemClicked', item, this.index, itemIndex, 'recycler')
+    onItemClicked (item, itemIndex, isRecycler) {
+      this.$emit('itemClicked', item, this.index, itemIndex, isRecycler ? 'recycler' : 'normal')
     }
   },
 
@@ -61,7 +61,7 @@ export default {
 </script>
 
 <style lang="css">
-  .item {
+  .rowItem {
     width: 175px;
     height: 259px;
     padding: 0;
@@ -70,18 +70,18 @@ export default {
     transition: transform .1s;
   }
 
-  .item:focus {
+  .rowItem:focus {
     outline: 6px solid #ff4d4d;
     transform: scale(1.1);
   }
 
-  .item img {
+  .rowItem img {
     width: 175px;
     height: 259px;
   }
 
-  .category .item,
-  .category .item img {
+  .category .rowItem,
+  .category .rowItem img {
     width: 300px;
     height: 220px;
   }

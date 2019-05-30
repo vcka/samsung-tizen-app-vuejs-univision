@@ -76,7 +76,7 @@ export default new Vuex.Store({
       if (value === undefined) {
         context.commit('togglePlayPause')
       } else {
-        context.commit('updatePlayPause')
+        context.commit('updatePlayPause', value)
       }
     }
   }

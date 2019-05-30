@@ -46,24 +46,22 @@ export default {
 
   methods: {
     debounceSearch (val) {
-      var vm = this
       clearTimeout(this.timeout)
-      this.timeout = setTimeout(function() {
-        vm.fetchSearch(val)
+      this.timeout = setTimeout(() => {
+        this.fetchSearch(val)
       }, 500)
     },
     fetchSearch (searchValue) {
       this.searching = true
-      var vm = this
-      fetch('http://192.168.2.88:8001/api/search/' + searchValue).then(function(response) {
+      fetch(process.env.VUE_APP_API_SERVER + '/api/search/' + searchValue).then(function(response) {
         return response.json()
-      }).then(function (data) {
-        vm.searchText = searchValue
-        vm.searchCount = data.results.length
-        vm.items = data.results
-        vm.searching = false
-      }).catch(function () {
-        vm.searching = false
+      }).then((data) => {
+        this.searchText = searchValue
+        this.searchCount = data.results.length
+        this.items = data.results
+        this.searching = false
+      }).catch(() => {
+        this.searching = false
       })
     },
     searchItemClicked (item, itemRowIndex, itemColumnIndex) {
