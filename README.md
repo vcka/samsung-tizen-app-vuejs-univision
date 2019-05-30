@@ -1,11 +1,11 @@
-# Univision IPTV VOD application for Samsung Smart TV (Tizen)
+# VOD application for Samsung Smart TV (Tizen). Built with Vuejs
 
 ## Note
-* Зөвхөн Samsung 2017 оны Smart TV (UM55MU7500) д зориулж хийсэн учир Chrome v47 (47.0.2526.0), 1920x1080 resolution дээр л ажиллана.
-* Backend API is for private use only.
+* Developed and tested only for Samsung 2017 Smart TV (UM55MU7500) which uses Chrome v47 (47.0.2526.0) and 1920x1080 resolution.
+* **Backend API is for private use only**
 
-## Screenshots
-TODO
+## Preview ([webm](https://gfycat.com/generalsimilarboubou))
+[![](https://i.imgur.com/9W2sFig.jpg)](https://gfycat.com/generalsimilarboubou)
 
 ## Resources
 <https://developer.samsung.com/tv/develop/getting-started/quick-start-guide>
@@ -13,7 +13,11 @@ TODO
 <https://developer.tizen.org/ko/development/training/web-application/getting-started/creating-your-first-tizen-tv-web-application?langredirect=1#run>
 
 ## Tizen Studio configurations and how to import
-1. Build with ```npm run build```
+1. Install and build with  
+```
+npm install
+npm run build
+```
 2. Tizen Studio -> Import -> Existing Projects Into Workspace -> Select this projects root folder -> Check "UnivisionVod /dist" -> Import
 3. To use Chrome Developer Tools
 
@@ -39,33 +43,7 @@ TODO
 4. Emulator Manager -> Create -> tv-samsung-3.0-x86 (basic)
 5. [Continue here](https://developer.tizen.org/ko/development/training/web-application/getting-started/creating-your-first-tizen-tv-web-application?langredirect=1#run)
 
-## Running/installing app on real TV
-TODO
-
-## Project setup
-```
-npm install
-```
-
 ### Compiles and hot-reloads for development
 ```
 npm run serve
 ```
-
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Run your tests
-```
-npm run test
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
